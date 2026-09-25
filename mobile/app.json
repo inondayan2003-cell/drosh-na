@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "דרוש-נא",
+    "slug": "drosh-na",
+    "scheme": "droshna",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#101C30",
+    "primaryColor": "#1A3761",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.droshna.mobile"
+    },
+    "android": {
+      "package": "app.droshna.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#1F295F",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#1F295F",
+          "dark": {
+            "backgroundColor": "#141B3E"
+          }
+        }
+      ],
+      "expo-status-bar",
+      "expo-router"
+    ]
+  }
+}
