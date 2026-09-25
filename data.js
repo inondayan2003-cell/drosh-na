@@ -1,8 +1,8 @@
 /*
-  מאגר לדוגמה עבור דרוש-נא.
-  זהו נתון לדוגמה בלבד לצורך פיתוח ובדיקה של ה-MVP — כתיבת תוכן הדרשות המלא
-  היא מחוץ להיקף האפליקציה ותתבצע בנפרד, בהתאם לחוזה הדאטה שבאפיון.
-  כל עוד מבנה window.DROSH_DATA נשמר, אפשר להחליף ולהרחיב את הקובץ הזה בלי לגעת בקוד.
+  מאגר הדרשות של דרוש-נא — קובץ המקור היחיד לתוכן.
+  window.DROSH_DATA נטען ישירות על ידי index.html (האתר), ומסונכרן אוטומטית
+  אל mobile/src/data/droshData.js על ידי scripts/sync-data.js.
+  אחרי כל עריכה כאן: node scripts/sync-data.js מהשורש.
 */
 window.DROSH_DATA = {
   parashot: {
@@ -47,9 +47,74 @@ window.DROSH_DATA = {
       },
       long: null
     },
+    "לך לך": { short: null, long: null },
     "וירא": { short: null, long: null },
     "חיי שרה": { short: null, long: null },
-    "לך לך": { short: null, long: null }
+    "תולדות": { short: null, long: null },
+    "ויצא": { short: null, long: null },
+    "וישלח": { short: null, long: null },
+    "וישב": { short: null, long: null },
+    "מקץ": { short: null, long: null },
+    "ויגש": { short: null, long: null },
+    "ויחי": { short: null, long: null },
+    "שמות": { short: null, long: null },
+    "וארא": { short: null, long: null },
+    "בא": { short: null, long: null },
+    "בשלח": { short: null, long: null },
+    "יתרו": { short: null, long: null },
+    "משפטים": { short: null, long: null },
+    "תרומה": { short: null, long: null },
+    "תצוה": { short: null, long: null },
+    "כי תשא": { short: null, long: null },
+    "ויקהל": { short: null, long: null },
+    "פקודי": { short: null, long: null },
+    "ויקרא": { short: null, long: null },
+    "צו": { short: null, long: null },
+    "שמיני": { short: null, long: null },
+    "תזריע": { short: null, long: null },
+    "מצרע": { short: null, long: null },
+    "אחרי מות": { short: null, long: null },
+    "קדושים": { short: null, long: null },
+    "אמור": { short: null, long: null },
+    "בהר": { short: null, long: null },
+    "בחוקותי": { short: null, long: null },
+    "במדבר": { short: null, long: null },
+    "נשא": { short: null, long: null },
+    "בהעלתך": { short: null, long: null },
+    "שלח": { short: null, long: null },
+    "קורח": { short: null, long: null },
+    "חוקת": { short: null, long: null },
+    "בלק": { short: null, long: null },
+    "פינחס": { short: null, long: null },
+    "מטות": { short: null, long: null },
+    "מסעי": { short: null, long: null },
+    "דברים": { short: null, long: null },
+    "ואתחנן": { short: null, long: null },
+    "עקב": { short: null, long: null },
+    "ראה": { short: null, long: null },
+    "שופטים": { short: null, long: null },
+    "כי תצא": { short: null, long: null },
+    "כי תבוא": { short: null, long: null },
+    "נצבים": { short: null, long: null },
+    "וילך": { short: null, long: null },
+    "האזינו": { short: null, long: null },
+    "וזאת הברכה": { short: null, long: null }
+  },
+  holidays: {
+    "ראש השנה": { short: null, long: null },
+    "יום כיפור": { short: null, long: null },
+    "סוכות": { short: null, long: null },
+    "שמחת תורה": { short: null, long: null },
+    "חנוכה": { short: null, long: null },
+    "ט\"ו בשבט": { short: null, long: null },
+    "פורים": { short: null, long: null },
+    "פסח": { short: null, long: null },
+    "יום העצמאות": { short: null, long: null },
+    "יום הזיכרון": { short: null, long: null },
+    "יום ירושלים": { short: null, long: null },
+    "ל\"ג בעומר": { short: null, long: null },
+    "שבועות": { short: null, long: null },
+    "תשעה באב": { short: null, long: null }
   },
   topics: [
     {
@@ -81,8 +146,11 @@ window.DROSH_DATA = {
       },
       long: null
     },
-    { name: "אבלות", tags: ["ניחום אבלים", "אזכרה", "יארצייט"], short: null, long: null },
-    { name: "ראש השנה", tags: ["חג", "תשובה", "תשרי"], short: null, long: null },
-    { name: "בר מצווה", tags: ["בן מצווה", "אירוע"], short: null, long: null }
+    { name: "אבלות", tags: ["ניחום אבלים", "אזכרה", "יארצייט", "שבעה"], short: null, long: null },
+    { name: "בר מצווה", tags: ["בן מצווה", "אירוע"], short: null, long: null },
+    { name: "בת מצווה", tags: ["בת מצווה", "אירוע"], short: null, long: null },
+    { name: "ברית מילה", tags: ["ברית", "לידה", "אירוע"], short: null, long: null },
+    { name: "חנוכת בית", tags: ["בית חדש", "אירוע"], short: null, long: null },
+    { name: "הבראה", tags: ["רפואה שלמה", "חולה"], short: null, long: null }
   ]
 };

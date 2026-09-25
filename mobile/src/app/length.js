@@ -4,16 +4,14 @@ import { Screen, ScreenTitle, Notice } from '../components/Screen';
 import BackRow from '../components/BackRow';
 import { LengthCard } from '../components/Buttons';
 import { DROSH_DATA } from '../data/droshData';
-import { minutesFor } from '../lib/parasha';
+import { minutesFor, entryFor, titleFor } from '../lib/parasha';
 
 export default function LengthScreen() {
   const router = useRouter();
   const { type, name } = useLocalSearchParams();
 
-  const entry = type === 'parasha'
-    ? DROSH_DATA.parashot[name]
-    : DROSH_DATA.topics.find((t) => t.name === name);
-  const title = type === 'parasha' ? `פרשת ${name}` : name;
+  const entry = entryFor(DROSH_DATA, type, name);
+  const title = titleFor(type, name);
 
   const short = entry?.short || null;
   const long = entry?.long || null;

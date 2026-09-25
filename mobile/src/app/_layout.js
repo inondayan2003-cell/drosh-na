@@ -34,6 +34,7 @@ function RootStack() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="parasha" />
+        <Stack.Screen name="holiday" />
         <Stack.Screen name="general" />
         <Stack.Screen name="length" />
         <Stack.Screen name="reading" />

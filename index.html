@@ -540,9 +540,47 @@
 
   var WORDS_PER_MINUTE = 120;
 
+  var HOLIDAY_ORDER = [
+    "ראש השנה","יום כיפור","סוכות","שמחת תורה","חנוכה","ט\"ו בשבט","פורים","פסח",
+    "יום העצמאות","יום הזיכרון","יום ירושלים","ל\"ג בעומר","שבועות","תשעה באב"
+  ];
+
+  /* Maps the exact Hebrew string Hebcal returns (category "holiday") to a
+     canonical name in HOLIDAY_ORDER. Verified against Hebcal's live API
+     (maj=on&min=on&mod=on, Israel calendar) across several years. Multi-day
+     holidays (Sukkot, Pesach, Chanukah) collapse every sub-day to one
+     canonical entry; "ערב X" days already point at X so prep starts a day
+     early, matching how the parasha screen looks ahead. Anything not in
+     this map (Sigd, Rabin memorial day, minor fasts, Purim Katan, Pesach
+     Sheni, Tu B'Av, etc.) is deliberately left unmapped and skipped by
+     detectHoliday — this app only surfaces days people typically prepare
+     a דבר תורה for. */
+  var HOLIDAY_MAP = {
+    "ראש השנה": "ראש השנה", "ערב ראש השנה": "ראש השנה", "ראש השנה א'": "ראש השנה", "ראש השנה ב'": "ראש השנה",
+    "ערב יום כיפור": "יום כיפור", "יום כיפור": "יום כיפור",
+    "ערב סוכות": "סוכות", "סוכות א'": "סוכות",
+    "סוכות ב' (חוה\"מ)": "סוכות", "סוכות ג' (חוה\"מ)": "סוכות", "סוכות ד' (חוה\"מ)": "סוכות",
+    "סוכות ה' (חוה\"מ)": "סוכות", "סוכות ו' (חוה\"מ)": "סוכות", "סוכות ז' (הושענא רבה)": "סוכות",
+    "שמיני עצרת": "שמחת תורה",
+    "חנוכה: א' נר": "חנוכה", "חנוכה: ב' נרות": "חנוכה", "חנוכה: ג' נרות": "חנוכה", "חנוכה: ד' נרות": "חנוכה",
+    "חנוכה: ה' נרות": "חנוכה", "חנוכה: ו' נרות": "חנוכה", "חנוכה: ז' נרות": "חנוכה", "חנוכה: ח' נרות": "חנוכה",
+    "חנוכה: יום ח'": "חנוכה",
+    "ט\"ו בשבט": "ט\"ו בשבט",
+    "ערב פורים": "פורים", "פורים": "פורים", "שושן פורים": "פורים",
+    "ערב פסח": "פסח", "פסח א'": "פסח",
+    "פסח ב' (חוה\"מ)": "פסח", "פסח ג' (חוה\"מ)": "פסח", "פסח ד' (חוה\"מ)": "פסח",
+    "פסח ה' (חוה\"מ)": "פסח", "פסח ו' (חוה\"מ)": "פסח", "פסח ז'": "פסח",
+    "יום הזכרון": "יום הזיכרון",
+    "יום העצמאות": "יום העצמאות",
+    "יום ירושלים": "יום ירושלים",
+    "ל\"ג בעומר": "ל\"ג בעומר",
+    "ערב שבועות": "שבועות", "שבועות": "שבועות",
+    "ערב תשעה באב": "תשעה באב", "תשעה באב": "תשעה באב"
+  };
+
   /* ============ data / state ============ */
 
-  var DATA = (window.DROSH_DATA && window.DROSH_DATA.parashot && window.DROSH_DATA.topics)
+  var DATA = (window.DROSH_DATA && window.DROSH_DATA.parashot && window.DROSH_DATA.topics && window.DROSH_DATA.holidays)
     ? window.DROSH_DATA : null;
 
   var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -585,6 +623,16 @@
 
   function hasAny(entry){
     return !!(entry && (entry.short || entry.long));
+  }
+
+  function entryFor(type, name){
+    if (type === 'parasha') return DATA.parashot[name];
+    if (type === 'holiday') return DATA.holidays[name];
+    return DATA.topics.filter(function(t){ return t.name === name; })[0];
+  }
+
+  function titleFor(type, name){
+    return type === 'parasha' ? 'פרשת ' + name : name;
   }
 
   function toast(msg){
@@ -656,6 +704,7 @@
   var RENDERERS = {
     home: renderHome,
     parasha: renderParasha,
+    holiday: renderHoliday,
     general: renderGeneral,
     length: renderLength,
     reading: renderReading
@@ -700,9 +749,13 @@
           '<div class="home-card-title">פרשת שבוע</div>' +
           '<div class="home-card-desc">דרשה על פרשת השבוע הקרובה, מזוהה אוטומטית</div>' +
         '</button>' +
+        '<button type="button" class="home-card" data-action="go-holiday">' +
+          '<div class="home-card-title">דרשה לחג</div>' +
+          '<div class="home-card-desc">דרשה על החג הקרוב, מזוהה אוטומטית</div>' +
+        '</button>' +
         '<button type="button" class="home-card" data-action="go-general">' +
           '<div class="home-card-title">דרשה כללית</div>' +
-          '<div class="home-card-desc">דרשה לפי נושא &ndash; שמחה, אבל, חג, אירוע ועוד</div>' +
+          '<div class="home-card-desc">דרשה לפי נושא &ndash; שמחה, אבל, אירוע ועוד</div>' +
         '</button>' +
       '</div>' +
       '</div>';
@@ -754,6 +807,49 @@
       '</div>';
   }
 
+  function buildManualHolidayOptions(selected){
+    return HOLIDAY_ORDER.map(function(name){
+      var available = hasAny(DATA.holidays[name]);
+      var sel = name === selected ? ' selected' : '';
+      var dis = available ? '' : ' disabled';
+      var label = name + (available ? '' : ' (בקרוב)');
+      return '<option value="' + esc(name) + '"' + sel + dis + '>' + esc(label) + '</option>';
+    }).join('');
+  }
+
+  function renderHoliday(params){
+    var state = params.loading ? 'loading' : (params.error ? 'error' : 'ready');
+    var boardName = params.detected || 'מאתר את החג&hellip;';
+    var body = '';
+
+    if (params.error){
+      body += '<div class="notice error">לא הצלחנו לאתר את החג הקרוב אוטומטית. בחר חג מהרשימה.</div>';
+    }
+
+    body += '<div class="parasha-board' + (state === 'loading' ? ' loading' : '') + '">' +
+      '<div class="board-name' + (state === 'ready' ? ' settle' : '') + '">' +
+      (state === 'loading' ? 'מאתר את החג&hellip;' : esc(boardName)) +
+      '</div></div>';
+
+    if (state === 'ready' && params.detected){
+      body += '<button type="button" class="primary-btn" data-action="confirm-holiday" data-name="' + esc(params.detected) + '">המשך לבחירת אורך</button>';
+    }
+
+    body += '<details class="manual-picker"' + (state === 'error' ? ' open' : '') + '>' +
+      '<summary>בחר חג אחר מהרשימה</summary>' +
+      '<select class="parasha-select" id="manualHolidaySelect" aria-label="בחירת חג">' +
+      '<option value="">&ndash; בחר חג &ndash;</option>' +
+      buildManualHolidayOptions(params.detected) +
+      '</select>' +
+      '</details>';
+
+    return '<div class="screen">' +
+      backRow() +
+      '<h1 class="screen-title">דרשה לחג</h1>' +
+      body +
+      '</div>';
+  }
+
   function renderGeneral(params){
     var query = params.query || '';
     var topics = DATA.topics.slice();
@@ -792,7 +888,7 @@
       backRow() +
       '<h1 class="screen-title">דרשה כללית</h1>' +
       '<div class="search-wrap">' +
-        '<input type="search" id="topicSearch" placeholder="חפש נושא&hellip; (למשל: חתונה, אבל, חג)" value="' + esc(query) + '" aria-label="חיפוש נושא">' +
+        '<input type="search" id="topicSearch" placeholder="חפש נושא&hellip; (למשל: חתונה, אבל, בר מצווה)" value="' + esc(query) + '" aria-label="חיפוש נושא">' +
       '</div>' +
       listHTML +
       '</div>';
@@ -801,8 +897,8 @@
   function renderLength(params){
     var type = params.type;
     var name = params.name;
-    var entry = type === 'parasha' ? DATA.parashot[name] : DATA.topics.filter(function(t){ return t.name === name; })[0];
-    var title = type === 'parasha' ? 'פרשת ' + name : name;
+    var entry = entryFor(type, name);
+    var title = titleFor(type, name);
 
     var shortDrasha = entry ? entry.short : null;
     var longDrasha = entry ? entry.long : null;
@@ -841,14 +937,14 @@
     var type = params.type;
     var name = params.name;
     var len = params.len;
-    var entry = type === 'parasha' ? DATA.parashot[name] : DATA.topics.filter(function(t){ return t.name === name; })[0];
+    var entry = entryFor(type, name);
     var drasha = entry ? entry[len] : null;
 
     if (!drasha){
       return '<div class="screen">' + backRow() + '<div class="notice error">הדרשה הזאת לא נמצאה.</div></div>';
     }
 
-    var context = type === 'parasha' ? 'פרשת ' + name : name;
+    var context = titleFor(type, name);
     var minutes = minutesFor(drasha.text);
     var words = wordCount(drasha.text);
     var canShare = !!(navigator.share);
@@ -892,6 +988,10 @@
         navigate('parasha', {loading:true});
         detectParasha();
       });
+      el.querySelector('[data-action="go-holiday"]').addEventListener('click', function(){
+        navigate('holiday', {loading:true});
+        detectHoliday();
+      });
       el.querySelector('[data-action="go-general"]').addEventListener('click', function(){
         navigate('general', {query:''});
       });
@@ -915,6 +1015,21 @@
       if (select){
         select.addEventListener('change', function(){
           if (select.value) navigate('length', {type:'parasha', name: select.value});
+        });
+      }
+    }
+
+    if (screen === 'holiday'){
+      var confirmHolidayBtn = el.querySelector('[data-action="confirm-holiday"]');
+      if (confirmHolidayBtn){
+        confirmHolidayBtn.addEventListener('click', function(){
+          navigate('length', {type:'holiday', name: confirmHolidayBtn.getAttribute('data-name')});
+        });
+      }
+      var holidaySelect = el.querySelector('#manualHolidaySelect');
+      if (holidaySelect){
+        holidaySelect.addEventListener('change', function(){
+          if (holidaySelect.value) navigate('length', {type:'holiday', name: holidaySelect.value});
         });
       }
     }
@@ -962,7 +1077,7 @@
       incBtn.addEventListener('click', function(){ readingScale += 0.1; applyScale(); });
 
       el.querySelector('[data-action="copy-drasha"]').addEventListener('click', function(){
-        var entry = params.type === 'parasha' ? DATA.parashot[params.name] : DATA.topics.filter(function(t){ return t.name === params.name; })[0];
+        var entry = entryFor(params.type, params.name);
         var drasha = entry[params.len];
         var plain = drasha.title + '\n\n' + drasha.text.join('\n\n');
         if (navigator.clipboard && navigator.clipboard.writeText){
@@ -979,7 +1094,7 @@
       var shareBtn = el.querySelector('[data-action="share-drasha"]');
       if (shareBtn){
         shareBtn.addEventListener('click', function(){
-          var entry = params.type === 'parasha' ? DATA.parashot[params.name] : DATA.topics.filter(function(t){ return t.name === params.name; })[0];
+          var entry = entryFor(params.type, params.name);
           var drasha = entry[params.len];
           navigator.share({
             title: drasha.title,
@@ -1070,6 +1185,43 @@
       navigate('parasha', {detected: resolved, holidayNotice: holidayNotice}, 'back');
     }).catch(function(){
       navigate('parasha', {error:true}, 'back');
+    });
+  }
+
+  /* ============ holiday detection ============ */
+
+  function resolveHolidayName(rawHebrew){
+    var normalized = rawHebrew.replace(/״/g, '"').replace(/׳/g, "'").trim();
+    return HOLIDAY_MAP[normalized] || null;
+  }
+
+  function detectHoliday(){
+    var today = new Date();
+    var start = todayISO(today);
+    var end = new Date(today.getTime());
+    end.setDate(end.getDate() + 60);
+    var endStr = todayISO(end);
+
+    var url = 'https://www.hebcal.com/hebcal?v=1&cfg=json&maj=on&min=on&mod=on&nx=off&mf=off&ss=off&c=off&s=off&i=on&geo=none'
+      + '&start=' + start + '&end=' + endStr;
+
+    fetch(url).then(function(res){
+      if (!res.ok) throw new Error('bad response');
+      return res.json();
+    }).then(function(json){
+      var items = (json.items || []).filter(function(it){ return it.category === 'holiday'; });
+      items.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+
+      var resolved = null;
+      for (var i = 0; i < items.length; i++){
+        var name = resolveHolidayName(items[i].hebrew);
+        if (name){ resolved = name; break; }
+      }
+      if (!resolved) throw new Error('no mappable holiday found');
+
+      navigate('holiday', {detected: resolved}, 'back');
+    }).catch(function(){
+      navigate('holiday', {error:true}, 'back');
     });
   }
 

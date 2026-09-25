@@ -9,7 +9,7 @@ import { Parchment } from '../components/Parchment';
 import { useToast } from '../context/ToastContext';
 import { useTheme, fonts } from '../theme';
 import { DROSH_DATA } from '../data/droshData';
-import { minutesFor, wordCount } from '../lib/parasha';
+import { minutesFor, wordCount, entryFor, titleFor } from '../lib/parasha';
 
 export default function ReadingScreen() {
   const theme = useTheme();
@@ -17,9 +17,7 @@ export default function ReadingScreen() {
   const { type, name, len } = useLocalSearchParams();
   const [fontScale, setFontScale] = useState(1);
 
-  const entry = type === 'parasha'
-    ? DROSH_DATA.parashot[name]
-    : DROSH_DATA.topics.find((t) => t.name === name);
+  const entry = entryFor(DROSH_DATA, type, name);
   const drasha = entry ? entry[len] : null;
 
   if (!drasha) {
@@ -31,7 +29,7 @@ export default function ReadingScreen() {
     );
   }
 
-  const context = type === 'parasha' ? `פרשת ${name}` : name;
+  const context = titleFor(type, name);
   const minutes = minutesFor(drasha.text);
   const words = wordCount(drasha.text);
   const plainText = `${drasha.title}\n\n${drasha.text.join('\n\n')}`;

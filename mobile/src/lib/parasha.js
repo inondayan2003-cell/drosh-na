@@ -58,6 +58,16 @@ export function hasAny(entry) {
   return !!(entry && (entry.short || entry.long));
 }
 
+export function entryFor(DROSH_DATA, type, name) {
+  if (type === 'parasha') return DROSH_DATA.parashot[name];
+  if (type === 'holiday') return DROSH_DATA.holidays[name];
+  return DROSH_DATA.topics.find((t) => t.name === name);
+}
+
+export function titleFor(type, name) {
+  return type === 'parasha' ? `פרשת ${name}` : name;
+}
+
 function todayISO(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');

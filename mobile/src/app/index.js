@@ -34,8 +34,13 @@ export default function HomeScreen() {
         onPress={() => router.push('/parasha')}
       />
       <HomeCard
+        title="דרשה לחג"
+        description="דרשה על החג הקרוב, מזוהה אוטומטית"
+        onPress={() => router.push('/holiday')}
+      />
+      <HomeCard
         title="דרשה כללית"
-        description="דרשה לפי נושא – שמחה, אבל, חג, אירוע ועוד"
+        description="דרשה לפי נושא – שמחה, אבל, אירוע ועוד"
         onPress={() => router.push('/general')}
       />
     </Screen>
